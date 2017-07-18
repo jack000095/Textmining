@@ -6,7 +6,7 @@ import os
 
 def get_score(comment):
     #获取得分词典当中每一个得分的位置
-    seg = codecs.open('程度级别词语（中文）.txt')
+    seg = codecs.open('resources\\程度级别词语（中文）.txt')
     a = seg.readlines()
     i_list = []
     for each in range(len(a)):
@@ -18,8 +18,10 @@ def get_score(comment):
     print(i_list) 
     seg.close
     
+
+    
     #获取得分
-    topic_word_file = codecs.open('topic_word.txt','r','utf-8')
+    topic_word_file = codecs.open('lda_Result\\topic_word.txt','r','utf-8')
     score_topic_list = []
     for each_topic in topic_word_file.readlines():
         #获取每一个topic当中的7个word，输出成为list，祝词调用
@@ -43,47 +45,90 @@ def get_score(comment):
         score_word_list = []
         #对每一个word进行计分
         for each_word in topic_word_list:
-            print(each_word)
+            #先打开几个基本上用到的词典
+            seg = codecs.open('resources\\程度级别词语（中文）.txt')
+            neg_comment = codecs.open('resources\\负面评价词语（中文）.txt')
+            neg_feel = codecs.open('resources\\负面情感词语（中文）.txt')
+            pos_comment = codecs.open('resources\\正面评价词语（中文）.txt')
+            pos_feel = codecs.open('resources\\正面情感词语（中文）.txt')
+            
+#             print(each_word)
             score_word = []
             if comment.find(each_word)!=-1:
-                location = comment.find(each_word)
-                seg1 = comment[location-2:location]
-#                 print(seg1.strip())
-                seg2 = comment[location+2:location+4]
-#                 print(seg2.strip())
-                seg = codecs.open('程度级别词语（中文）.txt')
-                a = seg.readlines()
-                for aaa in range(len(a)):
-#                     print(str(aaa)+'   '+str(a[aaa]).strip())
-                    if a[aaa].find(seg1)!=-1:
-                        for i_list_i in range(0,5):
-                            if aaa>=i_list[i_list_i] and aaa<i_list[i_list_i+1]:
-                                score_word.append(i_list_i+1)
-                                break
-                            elif aaa>=i_list[5]:
-                                score_word.append(6)
-                                break
-                            else:
-                                pass
-                            print('左边找到位置'+str(aaa).strip()+str(a[aaa]))
+                location_word = comment.find(each_word)
+                loc_word = comment[location_word-4 if location_word-4>0 else 0:location_word+len(each_word)+4]
+#                 print(loc_word)
+                #对tpoic附近的情感情况判断
+                score_temp = 0
+                loc_adj = 0
+                adj = ''
+                for eeeee in neg_comment.readlines():
+                    eeeee = eeeee.replace('\n','').replace('\t','').replace(' ','')
+                    if eeeee in loc_word and eeeee!='':
+                        score_temp = -1
+                        loc_adj = loc_word.find(eeeee)
+                        adj = eeeee
                         break
-                    elif a[aaa].find(seg2)!=-1:
-                        for i_list_i in range(0,5):
-                            if aaa>=i_list[i_list_i] and aaa<i_list[i_list_i+1]:
-                                score_word.append(i_list_i+1)
-                                break
-                            elif aaa>=i_list[5]:
-                                score_word.append(6)
-                                break
-                            else:
-                                pass
-                        print('右边找到位置'+str(aaa).strip()+str(a[aaa]))
+                for eeeee in neg_feel.readlines():
+                    eeeee = eeeee.replace('\n','').replace('\t','').replace(' ','')
+                    if eeeee in loc_word and eeeee!='':
+                        score_temp = -1
+                        loc_adj = loc_word.find(eeeee)
+                        adj = eeeee
                         break
-                    else:
-                        pass
-                
+                for eeeee in pos_comment.readlines():
+                    eeeee = eeeee.replace('\n','').replace('\t','').replace(' ','')
+                    if eeeee in loc_word and eeeee!='':
+                        score_temp = 1
+                        loc_adj = loc_word.find(eeeee)
+                        adj = eeeee
+                        break
+                for eeeee in pos_feel.readlines():
+                    eeeee = eeeee.replace('\n','').replace('\t','').replace(' ','')
+                    if eeeee in loc_word and eeeee!='':
+                        score_temp = 1
+                        loc_adj = loc_word.find(eeeee)
+                        adj = eeeee
+                        break
+#                 print('找到形容词：'+str(adj))
+#                 print('找到形容词loc：'+str(loc_adj))
+#                 print('找到形容词score：'+str(score_temp))
+                #对topic附近的情感情况计分
+                if score_temp!=0:
+                    string_adv = comment[loc_adj-4+location_word if loc_adj-4+location_word>0 else 0:loc_adj+len(adj)+4+location_word]
+                    a = seg.readlines()
+                    panduan = False
+                    for aaa in range(len(a)):
+        #                     print(str(aaa)+'   '+str(a[aaa]).strip())
+                        adv = a[aaa].replace('\n','').replace('\t','').replace(' ','')
+                        #找到副词位置
+                        if adv in string_adv and adv!='':
+#                             print('找到了副词'+adv+':'+string_adv)
+                            for i_list_i in range(0,5):
+                                if aaa>=i_list[i_list_i] and aaa<i_list[i_list_i+1]:
+                                    score_word.append((i_list_i+1)*score_temp)
+                                    panduan = True
+                                    break
+                                elif aaa>=i_list[5]:
+                                    score_word.append(6)
+                                    panduan = True
+                                    break
+                                else:
+                                    pass
+                                print('寻找adv发生错误'+str(aaa).strip()+str(a[aaa]))
+                            break
+                    if panduan==False:
+                        score_word.append(score_temp)
+                else:
+                    score_word.append(score_temp)
             else:
                 score_word.append(0)
+            
+            seg.close()
+            neg_comment.close()
+            neg_feel.close()
+            pos_comment.close()
+            pos_feel.close()
                 
             sc = 0
             for eee in score_word:
@@ -94,8 +139,8 @@ def get_score(comment):
                 avg = sc/len(score_word)
                 score_word_list.append(avg)
             
-            print('score_word')
-            print(score_word)
+#             print('score_word')
+#             print(score_word)
         print('score_word_list')
         print(score_word_list)
         
@@ -115,9 +160,9 @@ def get_score(comment):
 
 
 def io_comment():
-    dir = os.listdir('pre')
+    dir = os.listdir('data_pretreatment')
     for each_file in dir:
-        path = 'pre\\'+each_file
+        path = 'data_pretreatment\\'+each_file
         f = open(path)
         comment_list = []
         topic0_list = []
@@ -142,7 +187,7 @@ def io_comment():
         df.to_csv(aaa_path,sep=',')
         
 
-#将csv当中的comment部分变为可以训练的string的每行的cav
+#将csv当中的comment部分变为可以训练的string的每行的csv
 def preconsole():
     dir = os.listdir('test')
     for each_file in dir:

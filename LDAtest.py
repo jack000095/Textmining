@@ -112,7 +112,7 @@ if __name__=="__main__":
     _lda = LDA_temp(topics=6)  
     stop = [u'！', u'@', u'#', u'，',u'。',u'？',u'；',u' ',u'[',u']',u'￥',u'%',u'^',u'&',u'*',u'（',u'）',  
             u'“',u'”',u'：',u'‘',u'<',u'>',u'?',u'{',u'}',u'=',u'+',u'_',u'-',u'b',u'/',u';',u'～',u'、']
-    f = open('程度级别词语（中文）.txt')
+    f = open('resources\\程度级别词语（中文）.txt')
     for each in f.readlines():
         stop.append(str(each[:-1]))
     stop.append(u'了')
@@ -124,10 +124,10 @@ if __name__=="__main__":
     stop.append(u'很')
     f.close()
     _lda.setStopWords(stop)  
-    _lda.loadCorpusFromFile(u'LDA.txt')  
+    _lda.loadCorpusFromFile(u'data_pretreatment\\cleaned_USB_1_1.txt')  
     _lda.fitModel(n_iter=1500)  
     _lda.printTopic_Word(n_top_word=6)  
     _lda.printDoc_Topic()  
-    _lda.saveVocabulary(u'vocab.txt')  
-    _lda.saveTopic_Words(u'topic_word.txt')  
-    _lda.saveDoc_Topic(u'doc_topic.txt')  
+    _lda.saveVocabulary(u'lda_Result\\vocab.txt')  
+    _lda.saveTopic_Words(u'lda_Result\\topic_word.txt')  
+    _lda.saveDoc_Topic(u'lda_Result\\doc_topic.txt')  
